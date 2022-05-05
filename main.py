@@ -1,10 +1,47 @@
 import tkinter as tk
 from tkinter import *
+import pytz
+import requests
+from geopy.geocoders import Nominatim
+from timezonefinder import TimezoneFinder
+from datetime import datetime
 
 root = Tk()
 root.title("Weather App")
 root.geometry("900x500+300+200")
 root.resizable(False, False)
+
+
+def getweather():
+    city = textfield.get()
+    geolocator = Nominatim(user_agent="geoapiExercises")
+    location = geolocator.geocode(city)
+    obj = TimezoneFinder()
+    result = obj.timezone_at(lng=location.longitude, lat=location.latitude)
+    home = pytz.timezone(result)
+    local_time = datetime.now(home)
+    current_time = local_time.strftime("%I:%M %p")
+    clock.config(text=current_time)
+    name.config(text="current weather")
+    api = "https://api.openweathermap.org/data/2.5/weather?q=" + city + "&appid=cceb7325f72c5b7cde0c72f00ec7e837"
+    json_data = requests.get(api).json()
+    condition = json_data['weather'][0]['main']
+    description = json_data['weather'][0]['description']
+    temp = int(json_data['main']['temp'] - 273.15)
+    humidity = json_data['main']['humidity']
+    pressure = json_data['main']['pressure']
+    wind = json_data['wind']['speed']
+
+    t.config(text=(temp, '°'))
+    c.config(text=(condition, "|", "feels", "like", temp, '°'))
+
+    w.config(text=wind)
+    w.config(text=humidity)
+    w.config(text=description)
+    w.config(text=pressure)
+
+    messagebox.showerror("weather app", "invalid entry")
+
 
 # search box
 Search_image = PhotoImage(file="img/search.png")
@@ -18,7 +55,7 @@ textfield.place(x=50, y=40)
 textfield.focus()
 
 Search_icon = PhotoImage(file="img/search_icon.png")
-myimage_icon = Button(image=Search_icon, borderwidth=0, cursor="hand2", bg="#404040")
+myimage_icon = Button(image=Search_icon, borderwidth=0, cursor="hand2", bg="#404040", command=getweather)
 myimage_icon.place(x=400, y=34)
 
 # logo
